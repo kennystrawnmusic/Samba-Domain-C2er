@@ -15,4 +15,5 @@ localip=${10}
 sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=both -U $remdom.$remsuffix\\$remdomadmuser --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\$localdomadmuser --local-dc-use-krb5-ccache=$localccachepath
 
 # Create wildcard record pointing at our network-facing local IP
-./targetresolver.sh $localdom $localsuffix $localccachepath "*" $localip
+sudo samba-tool dns zonecreate 127.0.0.1 $localdom.$localsuffix --use-kerberos=required --use-krb5-ccache=$localccachepath
+sudo samba-tool dns add 127.0.0.1 $localdom.$localsuffix "*" A $localip --use-kerberos=required --use-krb5-ccache=$localccachepath
