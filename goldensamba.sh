@@ -24,7 +24,7 @@ cat > /etc/samba/smb.conf << EOF
         template shell = /bin/bash
         kerberos method = secrets and keytab
         winbind refresh tickets = yes
-        interfaces = ${args[@]:4} # all positional arguments after $4 are network interfaces
+        interfaces = ${args[@]:4}
         bind interfaces only = yes
         kdc default domain supported enctypes = aes256-cts-hmac-sha1-96-sk aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 arcfour-hmac-md5
         kdc:user ticket lifetime = 87600
