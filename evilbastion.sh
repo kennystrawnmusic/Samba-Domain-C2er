@@ -1,13 +1,15 @@
 #!/bin/bash
 
 localdom=$1
-localsuffix=$2
-remdom=$3
-remsuffix=$4
-shadowprinsid=$5
-remote=$6
-localccachepath=$7
-remccachepath=$8
+localdomadmuser=$2
+localsuffix=$3
+remdom=$4
+remdomadmuser=$5
+remsuffix=$6
+shadowprinsid=$7
+remote=$8
+localccachepath=$9
+remccachepath=${10}
 
 # Use Python to convert supplied SID to binary form necessary for raw LDAP operations
 cat > /tmp/convSid.py << EOF
@@ -44,7 +46,7 @@ EOF
 b64sid=$(python3 /tmp/convSid.py $shadowprinsid)
 
 # Create trust
-sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=incoming --treat-as-external -U $remdom.$remsuffix\\Administrator --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\Administrator --local-dc-use-krb5-ccache=$localccachepath
+sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=incoming --treat-as-external -U $remdom.$remsuffix\\$remdomadmuser --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\$localdomadmuser --local-dc-use-krb5-ccache=$localccachepath
 
 # Modify trust attributes on remote
 cat > remtrustattr.ldif << EOF
@@ -82,7 +84,7 @@ dn: CN=$remdom-Enterprise Admins,CN=Shadow Principal Configuration,CN=Configurat
 changetype: add
 objectClass: msDS-ShadowPrincipal
 msDS-ShadowPrincipalSid: $b64sid
-member: CN=Administrator,CN=Users,DC=$localdom,DC=$localsuffix
+member: CN=$localdomadmuser,CN=Users,DC=$localdom,DC=$localsuffix
 EOF
 
 KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f shadowprin.ldif
