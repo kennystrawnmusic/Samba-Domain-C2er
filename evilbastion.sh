@@ -71,16 +71,21 @@ EOF
 KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/localtrustattr.ldif
 rm /tmp/localtrustattr.ldif
 
-# Create shadow principal container
-cat > /tmp/shadowcontaineradd.ldif << EOF
+# Check if shadow principal container exists and create if it doesn't
+KRB5CCNAME=$localccachepath ldapsearch -Q -Y GSSAPI -H ldap://127.0.0.1 -b "CN=Shadow Principal Configuration,CN=Configuration,DC=$localdom,DC=$localsuffix" -s base "(objectClass=*)" &>/dev/null
+
+if [ $? -eq 32 ]
+then
+  cat > /tmp/shadowcontaineradd.ldif << EOF
 dn: CN=Shadow Principal Configuration,CN=Configuration,DC=$localdom,DC=$localsuffix
 objectClass: top
 objectClass: msDS-ShadowPrincipalContainer
 description: Container for Shadow Principal objects
 EOF
 
-KRB5CCNAME=$localccachepath ldapadd -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/shadowcontaineradd.ldif
-rm /tmp/shadowcontaineradd.ldif
+  KRB5CCNAME=$localccachepath ldapadd -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/shadowcontaineradd.ldif
+  rm /tmp/shadowcontaineradd.ldif
+fi
 
 # Create "Enterprise Admins" shadow principal and add attacker DA user to it
 cat > /tmp/shadowprin.ldif << EOF
