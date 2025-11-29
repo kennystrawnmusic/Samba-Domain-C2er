@@ -19,17 +19,9 @@ def sid_to_bytes(sid_string):
     parts = sid_string.strip('S-').split('-')
     revision = int(parts[0])
     sub_authority_count = len(parts) - 2
-
-    # Identifier Authority (big-endian 6-byte value, typically 0,0,0,0,0,5 for NT Authority)
-    # The value '5' needs special handling to be represented as 00 00 00 00 00 05 (big-endian)
     identifier_authority = int(parts[1])
-
-    # Start with revision (1 byte) and sub-authority count (1 byte)
     byte_sid = struct.pack('<BB', revision, sub_authority_count)
 
-    # Pack the 6-byte Identifier Authority. This is tricky to do with standard struct
-    # for a 6-byte int. A common value for domain SIDs is '5' (NT AUTHORITY) which is
-    # 0x000000000005. We can hardcode the common case (S-1-5) or handle generally.
     if identifier_authority == 5:
         byte_sid += struct.pack('>Q', identifier_authority)[2:] # Take last 6 bytes of big-endian uint64
     else:
@@ -37,7 +29,6 @@ def sid_to_bytes(sid_string):
         print('Error: Non-standard SID authority not fully supported by this script.')
         sys.exit(1)
 
-    # Pack the sub-authorities (little-endian 32-bit integers)
     for i in range(2, len(parts)):
         sub_authority = int(parts[i])
         # Use '<L' for little-endian unsigned long (4 bytes)
