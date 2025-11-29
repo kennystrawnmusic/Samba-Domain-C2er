@@ -9,6 +9,7 @@ dchost=${args[3]}
 
 nbname=${realm%%\.*}
 
+# Configure smb.conf with a default ticket lifetime of 10 years (87600 hours)
 cat > /etc/samba/smb.conf << EOF
 # Global parameters
 [global]
@@ -41,6 +42,7 @@ cat > /etc/samba/smb.conf << EOF
         read only = No
 EOF
 
+# Configure krb5.conf to also have a long ticket lifetime (in this case 10 years = 3650 days)
 cat > /etc/krb5.conf << EOF
 [libdefaults]
         default_realm = $realm
@@ -65,6 +67,7 @@ $realm = {
         $dchost = $realm
 EOF
 
+# Configure pam_winbind.conf for winbind PAM module
 cat > /etc/security/pam_winbind.conf << EOF
 /etc/security/pam_winbind.conf
 [global]
