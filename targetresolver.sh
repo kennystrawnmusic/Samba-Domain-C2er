@@ -13,8 +13,8 @@ samba-tool dns query --use-kerberos=required --use-krb5-ccache=$localccachepath 
 if [ $? -eq 255 ]
 then
   # Create zone on local DC pointing to remote domain
-  sudo samba-tool dns zonecreate $localhostname $remdom.$remsuffix --use-kerberos=required --use-krb5-ccache=$localccachepath
+  samba-tool dns zonecreate $localhostname $remdom.$remsuffix --use-kerberos=required --use-krb5-ccache=$localccachepath
 fi
 
 # Create A record pointing at specified IP
-sudo samba-tool dns add $localhostname $remdom.$remsuffix $recname A $remote --use-kerberos=required --use-krb5-ccache=$localccachepath
+samba-tool dns add $localhostname $remdom.$remsuffix $recname A $remote --use-kerberos=required --use-krb5-ccache=$localccachepath
