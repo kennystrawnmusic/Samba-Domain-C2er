@@ -55,6 +55,8 @@ cat > /etc/krb5.conf << EOF
 
 [realms]
 $realm = {
+        admin_server = $dchost
+        kdc = $dchost
         default_domain = $domain
         auth_to_local = RULE:[1:\$1@$domain]
 }
